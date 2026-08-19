@@ -1,6 +1,8 @@
 package com.quincaillerie.gestion_equipement.config;
 
 import com.quincaillerie.gestion_equipement.security.JwtAuthFilter;
+import com.quincaillerie.gestion_equipement.security.RestAccessDeniedHandler;
+import com.quincaillerie.gestion_equipement.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,8 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService employeDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
 
     @Bean
@@ -30,11 +34,16 @@ public class SecurityConfig {
         return new org.springframework.security.authentication.ProviderManager(provider);
     }
 
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/employes/**").hasRole("ADMINISTRATEUR")
@@ -44,4 +53,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }
